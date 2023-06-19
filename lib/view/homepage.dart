@@ -1,9 +1,12 @@
 import 'package:fetch_api/controller/product_controller.dart';
 import 'package:fetch_api/model/product_model.dart';
+import 'package:fetch_api/widget/shrimmer_loading.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:get/get.dart';
 import 'package:readmore/readmore.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:shimmer/shimmer.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -13,20 +16,13 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  List<ProductModel> products = [];
-  getProduct() async {
-    await ProductController().getProduct().then((value) {
-      setState(() {
-        products = value!;
-      });
-    });
-  }
+  var controller = Get.put(ProductController());
 
   @override
   void initState() {
     // TODO: implement initState
     super.initState();
-    getProduct();
+    controller.onInit();
   }
 
   @override
@@ -35,10 +31,15 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         title: const Text('SHOP SHOP'),
       ),
-      body: ListView.builder(
-        itemCount: products.length,
-        itemBuilder: (context, index) => buildCardProduct(products[index]),
-      ),
+      body: controller.obx(
+          (state) => ListView.builder(
+                itemCount: state!.length,
+                itemBuilder: (context, index) => buildCardProduct(state[index]),
+              ),
+          onEmpty: const Center(
+            child: Text('No Data'),
+          ),
+          onLoading: ProductCardShrimmer()),
     );
   }
 
@@ -114,5 +115,22 @@ class _HomePageState extends State<HomePage> {
         ),
       ],
     );
+  }
+
+  Widget ProductCardShrimmer() {
+    return SizedBox(
+        child: ListView.builder(
+      itemCount: 4,
+      itemBuilder: (context, index) => Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Container(
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(20)),
+          child: ShimmerLoadingWidget(
+            width: double.infinity,
+            height: 200,
+          ).rectangular(),
+        ),
+      ),
+    ));
   }
 }
